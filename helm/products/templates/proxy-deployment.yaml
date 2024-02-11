@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{ .Values.proxy.label }}
+  name: {{ .Values.proxy.name }}  
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:    
+    - port: {{ .Values.proxy.service.port }}      
+      targetPort: {{ .Values.proxy.port }} 
+  selector:
+    app: {{ .Values.proxy.label }}  
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.proxy.name }}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: {{ .Values.proxy.ingres.annotations.rewrite }}
+  namespace: {{ .Values.namespace }}
+spec:
+  rules:
+  - host: {{ .Values.proxy.ingres.host }}
+    http:
+      paths:
+      - path: {{ .Values.proxy.ingres.path }}
+        pathType: {{ .Values.proxy.ingres.pathType }}
+        backend:
+          service:
+            name: {{ .Values.proxy.name }}
+            port:
+              number: {{ .Values.proxy.ingres.backend.port }}         
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:  
+  labels:
+    app: {{ .Values.proxy.label }}
+  name: {{ .Values.proxy.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.proxy.label }}
+  template:
+    metadata:      
+      labels:
+        app: {{ .Values.proxy.label }}
+    spec:
+      containers:
+        - image: {{ .Values.proxy.image }}
+          name: {{ .Values.proxy.name }}
+          ports:
+            - containerPort: {{ .Values.proxy.port }} 
+          resources:
+            requests:
+              memory: {{ .Values.proxy.resources.requests.memory }}  
+              cpu: {{ .Values.proxy.resources.requests.cpu }}  
+            limits: 
+              memory: {{ .Values.proxy.resources.limits.memory }}  
+              cpu: {{ .Values.proxy.resources.limits.cpu }}   
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.proxy.readinessProbe.tcpSocket.port }}
+          livenessProbe: 
+            tcpSocket:
+              port: {{ .Values.proxy.livenessProbe.tcpSocket.port }}
+          
