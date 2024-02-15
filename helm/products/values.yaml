@@ -1,0 +1,113 @@
+namespace: products
+
+configMap:
+  db: "postgres"
+  host: "postgres"
+  port: 5432
+  name: env
+
+environment:
+  POSTGRES_HOST: POSTGRES_HOST
+  POSTGRES_PORT: POSTGRES_PORT
+  POSTGRES_DB: POSTGRES_DB   
+
+secret:
+  name: db  
+  POSTGRES_USER: POSTGRES_USER
+  POSTGRES_PASSWORD: POSTGRES_PASSWORD   
+ 
+db:
+  name: postgres
+  label: postgres  
+  port: "5432"
+  storage:
+    className: ""  
+    accessModes: "ReadWriteMany"
+    hostPath: "/mnt/data"
+    pvc: "100Mi"
+    pv: "1Gi"
+  image: public.ecr.aws/o5j9v9p7/db:latest    
+  service:    
+    port: "5432"
+  replicas: "1"
+  strategy: Recreate   
+  environment:
+    POSTGRES_HOST: POSTGRES_HOST
+    POSTGRES_PORT: POSTGRES_PORT
+    POSTGRES_DB: POSTGRES_DB
+  secret:
+    name: db  
+    POSTGRES_USER: POSTGRES_USER
+    POSTGRES_PASSWORD: POSTGRES_PASSWORD          
+  volumeMounts:
+      name: db-data
+      mountPath: /var/lib/postgresql/data
+  volumes:
+      name: db-data
+  resources: 
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+app:
+  name: app
+  label: app  
+  port: "5000"
+  image: public.ecr.aws/o5j9v9p7/app:latest  
+  service:    
+    port: "5000"
+  replicas: "3"
+  strategy: Recreate   
+  resources: 
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi     
+  livenessProbe:
+    httpGet:
+      path: "/app_health_check"
+      port: "5000"
+  readinessProbe:
+    httpGet:
+      path: "/app_health_check"
+      port: "5000"
+           
+proxy:
+  name: proxy
+  label: proxy  
+  port: "80"
+  image: public.ecr.aws/o5j9v9p7/proxy:latest
+  service:    
+    port: "80"
+  replicas: "1"
+  strategy: Recreate   
+  resources: 
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi     
+  readinessProbe:
+    tcpSocket:
+      port: 80
+  livenessProbe: 
+    tcpSocket:
+      port: 80
+  ingres:      
+    host: localhost
+    annotations:
+     rewrite-target: /    
+    path: "/"
+    pathType: Prefix
+    backend:
+      port: 80
+          
+
+           
+
