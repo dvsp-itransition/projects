@@ -40,7 +40,7 @@ helm template products products
 helm install --dry-run --debug products products
 ```
 
-To run the project locally, make git clone the project
+Now to run the project locally, we cab git clone the project
 
 ```
 git clone https://github.com/dvsp-itransition/projects.git
