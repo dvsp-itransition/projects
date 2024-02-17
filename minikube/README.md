@@ -77,6 +77,7 @@ alias kgn="kubectl get namespace"
 alias kgp="kubectl get pods"
 alias kgd="kubectl get deploy"
 alias k=kubectl
+alias h=helm
 
 # start minikube
 minikube start --vm-driver=none
