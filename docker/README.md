@@ -1,15 +1,15 @@
-### Задача: Работа с Docker
+### Task: Working with Docker
 
-1. Nginx - балансировщик
-2. Какой-то фронт (язык можешь выбрать сам или балванку использовать)
-3. DB 
+1. Nginx - Load Balancer
+2. Some Frontend (You can choose the language yourself)
+3. Database (DB)
 
-Все должно быть в . Фронт( >3 контейнеров) имеет коннект с бд и все это должно балансироваться через Nginx (на балансировщике должен быть пароль). 
-Все должно разворачиваться с нуля используя Dockerfile. Задание для docker-compose
+Everything should be in `. Frontend (>3 containers) should have a connection to the database, and all of this should be balanced through Nginx (there should be a password on the load balancer). 
+Everything should be deployed from scratch using Dockerfile. The task is for docker-compose.
 
-### Решение
+### Solution
 
-Структура
+Structure
 
 ```
 tree
@@ -37,7 +37,7 @@ tree
 5 directories, 14 files
 
 ```
-Создайте install-prerequisites.sh файл для установки docker, docker-compose, apache2-utils
+Create an install-prerequisites.sh file to install docker, docker-compose, apache2-utils.
 
 nano install-prerequisites.sh
 ```
@@ -56,8 +56,9 @@ sudo apt-get update
 # 2.Install the Docker packages.
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
 
+sudo usermod -aG docker $USER
 sudo systemctl enable docker
-sudo usermod -aG docker ${USER}
+sudo systemctl start docker
 
 # 3.Install docker-compose
 sudo curl -SL https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-x86_64 -o /usr/bin/docker-compose
@@ -70,32 +71,32 @@ docker version
 sudo apt-get update
 sudo apt-get install apache2-utils
 ```
-и запустите с командой 
+and run with the command:
 
 ```
 bash install-prerequisites.sh
 ```
 
-Теперь для локального запуска приложение следуйте инструкциям ниже:
+Now, to run the application locally, follow the instructions below:
 
-1) сделайте git clone  
+1) Clone the git repository. 
 
 ```
 git clone https://github.com/dvsp-itransition/docker.git
 cd docker
 ```
-2) Создайте .env файла со следующими значениями ( .env файла нужно поставить в корен папки на уровне файла docker-compose.yaml)
+2) Create a .env file and fill the empty values.(the .env file should be placed in the root folder at the same level as the docker-compose.yaml file).
 
 nano .env
 ```
-POSTGRES_USER=postgres
-POSTGRES_DB=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_HOST=postgres
-POSTGRES_PORT=5432
+POSTGRES_USER=""
+POSTGRES_DB=""
+POSTGRES_PASSWORD=""
+POSTGRES_HOST=""
+POSTGRES_PORT=""
 ```
 
-3) Создаем .htpasswd файл для nginx внутри папки proxy (например с пользователь user и пароль user). Запустите команду ниже
+3) Create a .htpasswd file for nginx inside the proxy folder (for example, with the user "user" and the password "user"). Run the command below.
 
 ```
 cd proxy
@@ -103,19 +104,19 @@ sudo htpasswd -c .htpasswd user
 cd ..
 ```
 
-должен создасться файл .htpasswd внутри папки proxy
+The file .htpasswd should be created inside the proxy folder.
 
 ![img_3.png](img%2Fimg_3.png)
 
 
-4) Потом запускаем докер-компос с командой ниже
+4) Then run Docker Compose with the command below.
 
 ```
 docker-compose up -d --build
 ```
 ![img_4.png](img%2Fimg_4.png)
 
-5) Проверяем в браузере с помощью localhost
+5) Check in the browser using localhost.
 
 ![img_5.png](img%2Fimg_5.png)
 

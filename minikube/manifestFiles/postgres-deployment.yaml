@@ -1,0 +1,124 @@
+apiVersion: v1
+kind: Namespace
+metadata:  
+  name: products
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: postgres
+  name: postgres  
+  namespace: products
+spec:
+  ports:
+    - port: 5432      
+      targetPort: 5432
+  selector:
+    app: postgres
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: db-env
+  name: env  
+  namespace: products
+data:
+  POSTGRES_DB: postgres
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: "5432"   
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: postgres
+  name: postgres  
+  namespace: products
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:        
+        app: postgres
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  key: POSTGRES_DB
+                  name: env
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  key: POSTGRES_HOST
+                  name: env
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  key: POSTGRES_PORT
+                  name: env
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_USER
+                  name: db
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: POSTGRES_PASSWORD
+                  name: db                  
+          image: public.ecr.aws/o5j9v9p7/db:latest
+          name: postgres
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "200m"
+            limits: 
+              memory: "200Mi"
+              cpu: "400m"
+          ports:
+            - containerPort: 5432
+              protocol: TCP            
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: db-data
+      restartPolicy: Always
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: db-pvc
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: db-pv
+spec:
+  storageClassName: ""
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/mnt/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db-pvc  
+  namespace: products
+spec:
+  storageClassName: ""
+  volumeName: db-pv
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Mi  
