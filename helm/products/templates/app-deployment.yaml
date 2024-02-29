@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{ .Values.app.label }}
+  name: {{ .Values.app.name }}  
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:    
+    - port: {{ .Values.app.service.port }}      
+      targetPort: {{ .Values.app.port }}  
+  selector:
+    app: {{ .Values.app.label }}  
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.app.label }}
+  name: {{ .Values.app.name }} 
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.app.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.app.label }}
+  template:
+    metadata:      
+      labels:
+        app: {{ .Values.app.label }}
+    spec:
+      containers:
+        - env:
+            - name: '{{ .Values.environment.POSTGRES_DB }}'
+              valueFrom:
+                configMapKeyRef:
+                  key: '{{ .Values.environment.POSTGRES_DB }}' 
+                  name: '{{ .Values.configMap.name }}' 
+            
+            - name: '{{ .Values.environment.POSTGRES_HOST }}'  
+              valueFrom:
+                configMapKeyRef:
+                  key: '{{ .Values.environment.POSTGRES_HOST }}' 
+                  name: '{{ .Values.configMap.name }}' 
+            
+            - name: '{{ .Values.environment.POSTGRES_PORT }}'  
+              valueFrom:
+                configMapKeyRef:
+                  key: '{{ .Values.environment.POSTGRES_PORT }}' 
+                  name: '{{ .Values.configMap.name }}' 
+            
+            - name: '{{ .Values.secret.POSTGRES_USER }}'
+              valueFrom:
+                secretKeyRef:
+                  key: '{{ .Values.secret.POSTGRES_USER }}' 
+                  name: '{{ .Values.secret.name }}'
+
+            - name: '{{ .Values.secret.POSTGRES_PASSWORD }}' 
+              valueFrom:
+                secretKeyRef:
+                  key: '{{ .Values.secret.POSTGRES_PASSWORD }}'
+                  name: '{{ .Values.secret.name }}'                       
+          image: {{ .Values.app.image }} 
+          name: {{ .Values.app.name }} 
+          ports:
+            - containerPort: {{ .Values.app.port }} 
+              protocol: TCP
+          resources:
+            requests:
+              memory: {{ .Values.app.resources.requests.memory }}  
+              cpu: {{ .Values.app.resources.requests.cpu }}  
+            limits: 
+              memory: {{ .Values.app.resources.limits.memory }}  
+              cpu: {{ .Values.app.resources.limits.cpu }}  
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.app.livenessProbe.httpGet.path }}
+              port: {{ .Values.app.livenessProbe.httpGet.port }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.app.readinessProbe.httpGet.path }}
+              port: {{ .Values.app.readinessProbe.httpGet.port }}
+         
+              
+      

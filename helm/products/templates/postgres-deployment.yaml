@@ -1,0 +1,123 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{ .Values.db.label }}
+  name: {{ .Values.db.name }}  
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:
+    - port: {{ .Values.db.service.port }}      
+      targetPort: {{ .Values.db.port }}  
+  selector:
+    app: {{ .Values.db.label }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.db.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  storageClassName: ""
+  volumeName: {{ .Values.db.name }}
+  accessModes:
+    - {{ .Values.db.storage.accessModes }}
+  resources:
+    requests:
+      storage: {{ .Values.db.storage.pvc }}   
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .Values.db.name }}
+spec:
+  storageClassName: ""
+  capacity:
+    storage: {{ .Values.db.storage.pv }}
+  accessModes:
+    - {{ .Values.db.storage.accessModes }}
+  hostPath:
+    path: {{ .Values.db.storage.hostPath }}
+   
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: '{{ .Values.configMap.name }}'
+  name: '{{ .Values.configMap.name }}' 
+  namespace: {{ .Values.namespace }}
+data:
+  POSTGRES_DB: '{{ .Values.configMap.db }}'
+  POSTGRES_HOST: '{{ .Values.configMap.host }}'    
+  POSTGRES_PORT: '{{ .Values.configMap.port }}'      
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.db.label }}
+  name: {{ .Values.db.name }}    
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.db.label }}
+  strategy:
+    type: {{ .Values.db.strategy }}
+  template:
+    metadata:
+      labels:        
+        app: {{ .Values.db.label }}
+    spec:
+      containers:
+        - env:
+            - name: '{{ .Values.environment.POSTGRES_DB }}'
+              valueFrom:
+                configMapKeyRef:
+                  key: '{{ .Values.environment.POSTGRES_DB }}' 
+                  name: '{{ .Values.configMap.name }}' 
+            
+            - name: '{{ .Values.environment.POSTGRES_HOST }}'  
+              valueFrom:
+                configMapKeyRef:
+                  key: '{{ .Values.environment.POSTGRES_HOST }}' 
+                  name: '{{ .Values.configMap.name }}' 
+            
+            - name: '{{ .Values.environment.POSTGRES_PORT }}'  
+              valueFrom:
+                configMapKeyRef:
+                  key: '{{ .Values.environment.POSTGRES_PORT }}' 
+                  name: '{{ .Values.configMap.name }}' 
+            
+            - name: '{{ .Values.secret.POSTGRES_USER }}'
+              valueFrom:
+                secretKeyRef:
+                  key: '{{ .Values.secret.POSTGRES_USER }}' 
+                  name: '{{ .Values.secret.name }}'
+
+            - name: '{{ .Values.secret.POSTGRES_PASSWORD }}' 
+              valueFrom:
+                secretKeyRef:
+                  key: '{{ .Values.secret.POSTGRES_PASSWORD }}'
+                  name: '{{ .Values.secret.name }}'                   
+          image: {{ .Values.db.image }}  
+          name: {{ .Values.db.name }}  
+          resources:
+            requests:
+              memory: {{ .Values.db.resources.requests.memory }}  
+              cpu: {{ .Values.db.resources.requests.cpu }}  
+            limits: 
+              memory: {{ .Values.db.resources.limits.memory }}  
+              cpu: {{ .Values.db.resources.limits.cpu }}  
+          ports:
+            - containerPort: {{ .Values.db.port }}  
+              protocol: TCP            
+          volumeMounts:
+            - mountPath: {{ .Values.db.volumeMounts.mountPath }}  
+              name: {{ .Values.db.volumeMounts.name }}         
+      volumes:
+        - name: {{ .Values.db.volumes.name }}  
+          persistentVolumeClaim:
+            claimName: {{ .Values.db.name }}  
