@@ -13,8 +13,8 @@ provider "aws" {
   region = var.region
 }
 
-module "network" {  
-  source = "git@github.com:dvsp-itransition/terraform-modules.git//simple_network"
+module "network" {
+  source = "git@github.com:dvsp-itransition/terraform-modules.git//simple_network"  
   vpc_cidr    = var.vpc_cidr
   region      = var.region
   environment = var.environment

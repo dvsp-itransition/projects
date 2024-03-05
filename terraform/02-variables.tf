@@ -1,7 +1,11 @@
-variable "vpc_cidr" {  
+variable "vpc_cidr" {
   default     = "10.0.0.0/16"
-  type        = string
-  description = "CIDR block for VPC"  
+  description = "CIDR block for VPC"
+
+  validation {
+    condition     = cidrnetmask(var.vpc_cidr) == "255.255.0.0"
+    error_message = "The provided CIDR block must have a netmask of /16"
+  }
 }
 
 variable "region" {
