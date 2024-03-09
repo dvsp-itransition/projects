@@ -27,30 +27,8 @@ module "network" {
     environment = var.environment
 }
 ```
-
-Diagram:
-
-![diagram.png](img%2Fdiagram.png)
-
 ### Solution:
 
-Structure:
-
-```
-.
-├── 01-main.tf
-├── 02-variables.tf
-├── 03-output.tf
-├── modules
-│   └── simple_network
-│       ├── 1-vpc.tf
-│       ├── 2-subnets.tf
-│       ├── 3-ngw.tf
-│       ├── 4-routes.tf
-│       ├── 5-variables.tf
-│       ├── 6-locals.tf
-│       └── 7-output.tf
-```
 Installing Terraform
 
 ```
@@ -74,37 +52,30 @@ Configuring AWS Access/Secret Keys
 ```
 aws configure # creates ~/.aws/credentials file
 ```
-main.tf file
+
+Root Module structure:
+
 ```
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 4.0" # min provider version    
-    }
-  }
-
-  required_version = ">= 0.13" # min Terraform version
-}
-
-provider "aws" {
-  region = var.region
-}
-
-module "network" {  
-  source = "git@github.com:dvsp-itransition/terraform-modules.git//simple_network"
-  vpc_cidr    = var.vpc_cidr
-  region      = var.region
-  environment = var.environment
-}
+.
+├── 01-provider.tf
+├── 02-main.tf
+├── 03-variables.tf
+├── 04-outputs.tf
+├── 05-terraform.tfvars
 ```
 
 The network module is available in a separate repository at the following address:
 ```
-https://github.com/dvsp-itransition/terraform-modules/tree/main/simple_network
+https://github.com/dvsp-itransition/terraform-module-network.git
 ```
-
-As well, the local copy is here: modules/simple_network
+Network Module structure:
+```
+.
+├── 1-main.tf
+├── 2-variables.tf
+├── 3-locals.tf
+└── 4-outputs.tf
+```
 
 Initializing the project, validating the configuration, and run deployment:
 
@@ -122,4 +93,3 @@ terraform apply --auto-approve
 
 ![img_1.png](img%2Fimg_1.png)
 
-![img-3.png](img%2Fimg-3.png)
