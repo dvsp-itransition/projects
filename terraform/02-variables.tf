@@ -3,9 +3,9 @@ variable "vpc_cidr" {
   description = "CIDR block for VPC"
 
   validation {
-    condition     = cidrnetmask(var.vpc_cidr) == "255.255.0.0"
-    error_message = "The provided CIDR block must have a netmask of /16"
-  }
+    condition     = can(cidrhost(var.vpc_cidr, 65534))
+    error_message = "Must be valid IPv4 CIDR with netmask of /16. for example: 10.0.0.0/16"
+  } 
 }
 
 variable "region" {
@@ -19,3 +19,6 @@ variable "environment" {
   type        = string
   description = "The environment for which the infrastructure is intended (e.g., dev, test, prod)"
 }
+
+
+
